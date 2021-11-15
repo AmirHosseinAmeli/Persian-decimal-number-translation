@@ -20,7 +20,7 @@ class Hundreds(DecimalGroup):
         unity_pats = self.aggregate_pats({k: self.unity.pat_map[k] for k in [1, 4, 6, 7, 8, 9]})
         cap_alphabet_pats = '(?:(' + unity_pats + ')\s*@hundreds.1|(@hundreds.1|@hundreds.2|@hundreds.3|@hundreds.5))' + \
                             '(?:\s*@and\s*(' + self.two_digits.related_pats() + '))?'
-        ncap_alphabet_pats = '(?:(' + unity_pats + ')\s*@hundreds.1|(?:@hundreds.1|@hundreds.2|@hundreds.3|@hundreds.5))' + \
+        ncap_alphabet_pats = '(?:(?:' + unity_pats + ')\s*@hundreds.1|(?:@hundreds.1|@hundreds.2|@hundreds.3|@hundreds.5))' + \
                              '(?:\s*@and\s*(?:' + self.two_digits.related_pats() + '))?'
         self.cap_alphabet_pats = DecimalGroup.var_subs.compile_vars(cap_alphabet_pats)
         self.ncap_alphabet_pats = DecimalGroup.var_subs.compile_vars(ncap_alphabet_pats)
