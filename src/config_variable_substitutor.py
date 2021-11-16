@@ -25,7 +25,7 @@ class ConfigVariableSumbstitutor:
 
     def _fetch_var(self, key):
         """
-        We load the file with each retrieval INTENTENALYY in the dev environment
+        We load the file with each retrieval INTENTIONALLY in the dev environment
         because of the frequent updates on the file.
         """
         stream = open("configs.yaml", "r")

@@ -1,4 +1,5 @@
 import operator
+import re
 from abc import ABC, abstractmethod
 from functools import reduce
 
@@ -16,7 +17,7 @@ class DecimalGroup(ABC):
     pass
 
   @abstractmethod
-  def related_pats(self):
+  def _capturing_pats(self):
     pass
 
   @staticmethod
@@ -25,3 +26,6 @@ class DecimalGroup(ABC):
     if len(pats) > 0:
       return reduce(lambda a, b: a + '|' + b, pats[1:], pats[0])
     return ''
+
+  def non_capturing_pats(self):
+    return re.sub('\((?!\?)', '(?:', self._capturing_pats())

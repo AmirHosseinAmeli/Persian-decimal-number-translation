@@ -24,5 +24,5 @@ class Unity(DecimalGroup):
     if word in self.w2n_dict:
       return self.w2n_dict[word]
 
-  def related_pats(self):
+  def _capturing_pats(self):
     return self.aggregate_pats(self.pat_map)
