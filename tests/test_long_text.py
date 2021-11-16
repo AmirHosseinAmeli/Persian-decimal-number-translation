@@ -1,11 +1,15 @@
 import re
 
+import pytest
+
 from thousand import Thousand
 
 
-def test_long_text():
+@pytest.mark.parametrize("text,num_list", [
+    ("حاصل جمع صد و ده و یکصدو بیست برابر دویست و سی می شود.", [110, 120, 230]),
+    ("صد و بیست و 2 انسان", [122]),
+])
+def test_long_text(text, num_list):
     recognizer = Thousand.get_instance()
-    text = "حاصل جمع صد و ده و یکصدو بیست برابر دویست و سی می شود."
     result = [recognizer.w2n(match.group()) for match in re.finditer(recognizer.non_capturing_pats(), text)]
-    assert result == [110, 120, 230]
-
+    assert result == num_list
