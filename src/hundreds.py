@@ -22,8 +22,7 @@ class Hundreds(DecimalGroup):
                             '(?:\s*@and\s*(' + self.two_digits.non_capturing_pats() + '))?'
         self.alphabet_pats = DecimalGroup.var_subs.compile_vars(alphabet_pats)
         self.w2n_dict = {DecimalGroup.var_subs.compile_vars('@hundreds.' + str(i)): 100 * i for i in [1, 2, 3, 5]}
-        self.numeric_pats = DecimalGroup.var_subs.compile_vars(
-            '([' + DecimalGroup.dig_pats + '])([' + DecimalGroup.dig_pats + ']{2})')
+        self.numeric_pats = '([\d])([\d]{2})'
 
     def w2n(self, word):
         suc = re.search(self.alphabet_pats, word)

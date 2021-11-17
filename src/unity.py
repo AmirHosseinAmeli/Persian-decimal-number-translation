@@ -13,7 +13,7 @@ class Unity(DecimalGroup):
 
   def __init__(self):
     self.w2n_dict = None
-    self.pat_map = {i: [str(i), DecimalGroup.var_subs.compile_vars('@unity.'+str(i)), DecimalGroup.pers_digs[i]] for i in range(10)}
+    self.pat_map = {i: [str(i), DecimalGroup.var_subs.compile_vars('@unity.'+str(i))] for i in range(10)}
 
   def w2n(self, word):
     if not self.w2n_dict:

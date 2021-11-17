@@ -22,7 +22,7 @@ class TwoDigits(DecimalGroup):
         self.tenth_alphabet = DecimalGroup.var_subs.compile_vars('(@2dig.20' + ''.join(
             ['|@2dig.' + str(i) for i in range(30, 100, 10)]) + ')(?:\s*@and\s*(' + unity_pats + '))?')
         self.w2tenth = {DecimalGroup.var_subs.compile_vars('@2dig.' + str(i)): i for i in range(10, 100, 10)}
-        self.tenth_num = '([' + DecimalGroup.dig_pats + '])' + '([' + DecimalGroup.dig_pats + '])'
+        self.tenth_num = '([\d])([\d])'
 
     def w2n(self, word):
         suc = re.search(self.aggregate_pats(self.teen_n2pats), word)

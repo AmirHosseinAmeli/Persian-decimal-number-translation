@@ -8,9 +8,7 @@ from config_variable_substitutor import ConfigVariableSumbstitutor
 
 class DecimalGroup(ABC):
 
-  pers_digs = '۰۱۲۳۴۵۶۷۸۹'
   var_subs = ConfigVariableSumbstitutor.get_instance()
-  dig_pats = pers_digs + ''.join(str(i) for i in range(10))
 
   @abstractmethod
   def w2n(self, word):

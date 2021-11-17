@@ -19,8 +19,7 @@ class Thousand(DecimalGroup):
         self.hundred = Hundreds.get_instance()
         alphabet_pats = '(' + self.hundred.non_capturing_pats() + ')?\s*@thousand(?:\s*@and\s*(' + self.hundred.non_capturing_pats() + '))?'
         self.alphabet_pats = DecimalGroup.var_subs.compile_vars(alphabet_pats)
-        self.numeric_pats = DecimalGroup.var_subs.compile_vars(
-            '([' + DecimalGroup.dig_pats + ']{1,3})([' + DecimalGroup.dig_pats + ']{3})')
+        self.numeric_pats = '([\d]{1,3})([\d]{3})'
 
     def w2n(self, word):
         suc = re.search(self.alphabet_pats, word)
