@@ -99,7 +99,10 @@ class Decimal():
         return None
 
     def get_class_patterns(self):
-        class_pattern = self.pattern1 + '|' + self.pattern2
+        class_pattern = '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern2 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         return remove_pattern_groups_matching(class_pattern)
 
 
@@ -141,8 +144,10 @@ class OneDigit():
     def get_class_patterns(self):
         class_pattern = self.digit_pattern
         if self.include_decimal:
-            class_pattern += '|' + self.pattern1 + self.adding_decimal_pattern
-        class_pattern += '|' + self.pattern1
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         if self.include_decimal:
             class_pattern += '|' + self.decimal_pattern
         return remove_pattern_groups_matching(class_pattern)
@@ -204,10 +209,14 @@ class TwoDigit():
     def get_class_patterns(self):
         class_pattern = self.digit_pattern
         if self.include_decimal:
-            class_pattern += '|' + self.pattern1 + self.adding_decimal_pattern
-            class_pattern += '|' + self.pattern2 + self.adding_decimal_pattern
-        class_pattern += '|' + self.pattern1
-        class_pattern += '|' + self.pattern2
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
+                            '(?!' + persian_alphabet_pattern + ')'
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern2 + self.adding_decimal_pattern + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern2 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern3
         return remove_pattern_groups_matching(class_pattern)
 
@@ -266,8 +275,10 @@ class Hundred():
     def get_class_patterns(self):
         class_pattern = self.digit_pattern
         if self.include_decimal:
-            class_pattern += '|' + self.pattern1 + self.adding_decimal_pattern
-        class_pattern += '|' + self.pattern1
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern2
         return remove_pattern_groups_matching(class_pattern)
 
@@ -321,8 +332,10 @@ class Thousand():
     def get_class_patterns(self):
         class_pattern = self.digit_pattern
         if self.include_decimal:
-            class_pattern += '|' + self.pattern1 + self.adding_decimal_pattern
-        class_pattern += '|' + self.pattern1
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern2
         return remove_pattern_groups_matching(class_pattern)
 
@@ -375,8 +388,10 @@ class Million():
     def get_class_patterns(self):
         class_pattern = self.digit_pattern
         if self.include_decimal:
-            class_pattern += '|' + self.pattern1 + self.adding_decimal_pattern
-        class_pattern += '|' + self.pattern1
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
+                            '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern2
         return remove_pattern_groups_matching(class_pattern)
 
@@ -429,14 +444,16 @@ class Billion():
     def get_class_patterns(self):
         class_pattern = self.digit_pattern
         if self.include_decimal:
-            class_pattern += '|' + self.pattern1 + self.adding_decimal_pattern
-        class_pattern += '|' + self.pattern1
+            class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
+                                '(?!' + persian_alphabet_pattern + ')'
+        class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
+                            '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern2
         return remove_pattern_groups_matching(class_pattern)
 
 
 def number_extractor(text):
-    number_list = []
+    output = []
     number_class = Billion()
     whole_pattern = '(?<!' + persian_alphabet_pattern + ')(' + number_class.get_class_patterns() + \
                          ')(?!' + persian_alphabet_pattern + ')'
@@ -445,6 +462,12 @@ def number_extractor(text):
 
     for matched_pattern in matched_patterns:
         matched_text = matched_pattern.group(1)
-        number_list.append(number_class.convert(matched_text))
+        number = number_class.convert(matched_text)
+        output.append(
+            {
+                'phrase' : matched_text,
+                'value' : number
+            }
+        )
 
-    return number_list
+    return output
