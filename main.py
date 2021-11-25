@@ -455,8 +455,7 @@ class Billion():
 def number_extractor(text):
     output = []
     number_class = Billion()
-    whole_pattern = '(?<!' + persian_alphabet_pattern + ')(' + number_class.get_class_patterns() + \
-                         ')(?!' + persian_alphabet_pattern + ')'
+    whole_pattern = '(' + number_class.get_class_patterns() + ')'
     text = get_normalized_text(text)
     matched_patterns = re.finditer(whole_pattern, text)
 
