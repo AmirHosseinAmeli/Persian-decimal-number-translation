@@ -112,6 +112,7 @@ class OneDigit():
         self.include_decimal = include_decimal
         self.digit_pattern = '(0*\d{1})'
         self.pattern1 = '(' + get_dict_pattern(one_digit_dict) + ')'
+        self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if include_decimal:
             self.decimal = Decimal()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
@@ -147,7 +148,8 @@ class OneDigit():
             class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
                             '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
-                            '(?!' + persian_alphabet_pattern + ')'
+                            ('(?!\s*(?:'+ self.decimal_suffixes + '))' if self.include_decimal else '') + \
+                                '(?!' + persian_alphabet_pattern + ')'
         if self.include_decimal:
             class_pattern += '|' + self.decimal_pattern
         return remove_pattern_groups_matching(class_pattern)
@@ -162,6 +164,7 @@ class TwoDigit():
         self.pattern1 = '(' + get_dict_pattern(two_digit_dict1) + ')'
         self.pattern2 = '(' + get_dict_pattern(two_digit_dict2) + ')(?:\s*و\s*(' +  self.one_digit.get_class_patterns() + '))?'
         self.pattern3 = '(' + self.one_digit.get_class_patterns() + ')'
+        self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if include_decimal:
             self.decimal = Decimal()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
@@ -214,9 +217,11 @@ class TwoDigit():
             class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern2 + self.adding_decimal_pattern + \
                             '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
-                            '(?!' + persian_alphabet_pattern + ')'
+                            ('(?!\s*(?:'+ self.decimal_suffixes + '))' if self.include_decimal else '') + \
+                                '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern2 + \
-                            '(?!' + persian_alphabet_pattern + ')'
+                            ('(?!\s*(?:'+ self.decimal_suffixes + '))' if self.include_decimal else '') + \
+                                '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern3
         return remove_pattern_groups_matching(class_pattern)
 
@@ -227,11 +232,12 @@ class Hundred():
         self.include_decimal = include_decimal
         self.digit_pattern = '(0*\d{3})'
         self.two_digit = TwoDigit(include_decimal = include_decimal)
-        hundred_part = '(?:(' + get_dict_pattern(three_digits_dict) + ')(?!م)' + \
-                        '|(' + self.two_digit.get_class_patterns() + ')(?!م)\s*' + value_list[0] + ')'
+        hundred_part = '(?:(' + get_dict_pattern(three_digits_dict) + ')' + \
+                        '|(' + self.two_digit.get_class_patterns() + ')\s*' + value_list[0] + ')'
         two_digit_part = '(' + self.two_digit.get_class_patterns() + ')'
         self.pattern1 = hundred_part + '(?:\s*و\s*' + two_digit_part + ')?'
         self.pattern2 = two_digit_part
+        self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if (include_decimal):
             self.decimal = Decimal()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
@@ -278,7 +284,8 @@ class Hundred():
             class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + self.adding_decimal_pattern + \
                             '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + '(?<!' + persian_alphabet_pattern + ')' + self.pattern1 + \
-                            '(?!' + persian_alphabet_pattern + ')'
+                            ('(?!\s*(?:'+ self.decimal_suffixes + '))' if self.include_decimal else '') + \
+                                '(?!' + persian_alphabet_pattern + ')'
         class_pattern += '|' + self.pattern2
         return remove_pattern_groups_matching(class_pattern)
 
@@ -289,7 +296,7 @@ class Thousand():
         self.include_decimal = include_decimal
         self.digit_pattern = '(0*\d{4,6})'
         self.hundred = Hundred(include_decimal = include_decimal)
-        thousand_part = '(?:(?:(' + self.hundred.get_class_patterns() + ')(?!م)\s*)?' + value_list[1] + ')'
+        thousand_part = '(?:(?:(' + self.hundred.get_class_patterns() + ')\s*)?' + value_list[1] + ')'
         hundred_part = '(' + self.hundred.get_class_patterns() + ')'
         self.pattern1 = thousand_part + '(?:\s*و\s*' + hundred_part + ')?'
         self.pattern2 = hundred_part
