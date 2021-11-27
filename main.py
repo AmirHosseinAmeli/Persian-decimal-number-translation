@@ -61,16 +61,22 @@ three_digits_dict = {
 
 value_list = ['صد', 'هزار', 'میلیون', 'میلیارد']
 
+#decimal separator for numerical part
 decimal_separator = ['\\', '.', ',', '٫', '/']
 decimal_separator_pattern = "|".join(re.escape(separator) for separator in decimal_separator)
+
+#persian alphabet pattern to avoid mismatching
 persian_alphabet_pattern = "|".join(re.escape(alphabet) for alphabet in persian_alphabet)
 
+#get regex pattern of a dictionary by it's keys
 def get_dict_pattern(input_dict):
     return "|".join(re.escape(key) for key in input_dict.keys())
 
+#replace capturing group regex with non-capturing regex
 def remove_pattern_groups_matching(pattern):
     return re.sub('\((?!\?)', '(?:', pattern)
 
+#convert persian numbers to english ones
 def get_normalized_text(text):
     persian_digits = '۰۱۲۳۴۵۶۷۸۹'
     english_digits = '0123456789'
@@ -79,12 +85,15 @@ def get_normalized_text(text):
 
     return text
 
+#class of decimal part of language
 class Decimal():
 
     def __init__(self):
         self.digit_pattern = '(?:' + decimal_separator_pattern + ')\d*'
         self.hundred = Hundred(include_decimal = False)
+        #pattern like نیم
         self.pattern1 = '(' + get_dict_pattern(decimal_exceptional_dict) + ')'
+        #pattern like دویست صدم
         self.pattern2 = '(' + self.hundred.get_class_patterns() + ')\s*(' + get_dict_pattern(decimal_dict) + ')'
 
     def convert(self, text):
@@ -111,6 +120,7 @@ class OneDigit():
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
         self.digit_pattern = '(0*\d{1})'
+        #pattern like یک
         self.pattern1 = '(' + get_dict_pattern(one_digit_dict) + ')'
         self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if include_decimal:
@@ -125,6 +135,7 @@ class OneDigit():
         if search:
             number = re.sub(decimal_separator_pattern, '.', search.group(1))
             return float(number)
+        #first check pattern with decimal if self.include_decimal == True
         if self.include_decimal:
             search = re.fullmatch(self.pattern1 + self.adding_decimal_pattern, text)
             if search:
@@ -132,11 +143,13 @@ class OneDigit():
                 res += one_digit_dict[search.group(1)]
                 res += self.decimal.convert(search.group(2))
                 return res
+        #then check all patterns without decimal part
         search = re.fullmatch(self.pattern1, text)
         if search:
             res = one_digit_dict[search.group(1)]
             return res
         search = re.fullmatch(self.decimal_pattern, text)
+        #sublevel pattern check
         if search:
             res = self.decimal.convert(search.group(1))
             return res
@@ -161,8 +174,11 @@ class TwoDigit():
         self.include_decimal = include_decimal
         self.digit_pattern = '(0*\d{2})'
         self.one_digit = OneDigit(include_decimal = include_decimal)
+        #pattern like یازده
         self.pattern1 = '(' + get_dict_pattern(two_digit_dict1) + ')'
+        #pattern like پنجاه و دو
         self.pattern2 = '(' + get_dict_pattern(two_digit_dict2) + ')(?:\s*و\s*(' +  self.one_digit.get_class_patterns() + '))?'
+        #sublevel patterns in the language hierarchy tree
         self.pattern3 = '(' + self.one_digit.get_class_patterns() + ')'
         self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if include_decimal:
@@ -177,6 +193,7 @@ class TwoDigit():
         if search:
             number = re.sub(decimal_separator_pattern, '.', search.group(1))
             return float(number)
+        #first check pattern with decimal if self.include_decimal == True
         if self.include_decimal:
             search = re.fullmatch(self.pattern1 + self.adding_decimal_pattern, text)
             if search: 
@@ -192,6 +209,7 @@ class TwoDigit():
                     res += self.one_digit.convert(search.group(2))
                 res += self.decimal.convert(search.group(3))
                 return res
+        #then check all patterns without decimal part
         search = re.fullmatch(self.pattern1, text)
         if search:
             res = two_digit_dict1[search.group(1)]
@@ -203,6 +221,7 @@ class TwoDigit():
             if search.group(2):
                 res += self.one_digit.convert(search.group(2))
             return res
+        #sublevel pattern check
         search = re.fullmatch(self.pattern3, text)
         if search:
             res = self.one_digit.convert(search.group(1))
@@ -235,7 +254,9 @@ class Hundred():
         hundred_part = '(?:(' + get_dict_pattern(three_digits_dict) + ')' + \
                         '|(' + self.two_digit.get_class_patterns() + ')\s*' + value_list[0] + ')'
         two_digit_part = '(' + self.two_digit.get_class_patterns() + ')'
+        #pattern like صد و بیست و 2
         self.pattern1 = hundred_part + '(?:\s*و\s*' + two_digit_part + ')?'
+        #sublevel patterns in the language hierarchy tree
         self.pattern2 = two_digit_part
         self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if (include_decimal):
@@ -250,6 +271,7 @@ class Hundred():
         if search:
             number = re.sub(decimal_separator_pattern, '.', search.group(1))
             return float(number)
+        #first check pattern with decimal if self.include_decimal == True
         if self.include_decimal:
             search = re.fullmatch(self.pattern1 + self.adding_decimal_pattern, text)
             if search:
@@ -262,6 +284,7 @@ class Hundred():
                     res += self.two_digit.convert(search.group(3))
                 res += self.decimal.convert(search.group(4))
                 return res
+        #then check all patterns without decimal part
         search = re.fullmatch(self.pattern1, text)
         if search:
             res = 0.
@@ -272,6 +295,7 @@ class Hundred():
             if search.group(3):
                 res += self.two_digit.convert(search.group(3))
             return res
+        #sublevel pattern check
         search = re.fullmatch(self.pattern2, text)
         if search:
             res = self.two_digit.convert(search.group(1))
@@ -298,7 +322,9 @@ class Thousand():
         self.hundred = Hundred(include_decimal = include_decimal)
         thousand_part = '(?:(?:(' + self.hundred.get_class_patterns() + ')\s*)?' + value_list[1] + ')'
         hundred_part = '(' + self.hundred.get_class_patterns() + ')'
+        #pattern like 2 هزار و صد و 20
         self.pattern1 = thousand_part + '(?:\s*و\s*' + hundred_part + ')?'
+        #sublevel patterns in the language hierarchy tree
         self.pattern2 = hundred_part
         if (include_decimal):
             self.decimal = Decimal()
@@ -312,6 +338,7 @@ class Thousand():
         if search:
             number = re.sub(decimal_separator_pattern, '.', search.group(1))
             return float(number)
+        #first check pattern with decimal if self.include_decimal == True
         if self.include_decimal:
             search = re.fullmatch(self.pattern1 + self.adding_decimal_pattern, text)
             if search:
@@ -322,6 +349,7 @@ class Thousand():
                     res += self.hundred.convert(search.group(2))
                 res += self.decimal.convert(search.group(3))
                 return res
+        #then check all patterns without decimal part
         search = re.fullmatch(self.pattern1, text)
         if search:
             res = 1000.
@@ -330,6 +358,7 @@ class Thousand():
             if search.group(2):
                 res += self.hundred.convert(search.group(2))
             return res
+        #sublevel pattern check
         search = re.fullmatch(self.pattern2, text)
         if search:
             res = self.hundred.convert(search.group(1))
@@ -354,7 +383,9 @@ class Million():
         self.thousand = Thousand(include_decimal = include_decimal)
         million_part = '(?:(' + self.thousand.get_class_patterns() + ')\s*' + value_list[2] + ')'
         thousand_part = '(' + self.thousand.get_class_patterns() + ')'
+        #pattern like دویست میلیون و 100 هزار
         self.pattern1 = million_part + '(?:\s*و\s*' + thousand_part + ')?'
+        #sublevel patterns in the language hierarchy tree
         self.pattern2 = thousand_part
         if (include_decimal):
             self.decimal = Decimal()
@@ -368,6 +399,7 @@ class Million():
         if search:
             number = re.sub(decimal_separator_pattern, '.', search.group(1))
             return float(number)
+        #first check pattern with decimal if self.include_decimal == True
         if self.include_decimal:
             search = re.fullmatch(self.pattern1 + self.adding_decimal_pattern, text)
             if search:
@@ -378,6 +410,7 @@ class Million():
                     res += self.thousand.convert(search.group(2))
                 res += self.decimal.convert(search.group(3))
                 return res
+        #then check all patterns without decimal part
         search = re.fullmatch(self.pattern1, text)
         if search:
             res = 0.
@@ -386,6 +419,7 @@ class Million():
             if search.group(2):
                 res += self.thousand.convert(search.group(2))
             return res
+        #sublevel pattern check
         search = re.fullmatch(self.pattern2, text)
         if search:
             res = self.thousand.convert(search.group(1))
@@ -410,7 +444,9 @@ class Billion():
         self.million = Million(include_decimal = include_decimal)
         billion_part = '(?:(' + self.million.get_class_patterns() + ')\s*' + value_list[3] + ')'
         million_part = '(' + self.million.get_class_patterns() + ')'
+        #pattern like دویست هزار میلیارد و یک
         self.pattern1 = billion_part + '(?:\s*و\s*' + million_part + ')?'
+        #sublevel patterns in the language hierarchy tree
         self.pattern2 = million_part
         if (include_decimal):
             self.decimal = Decimal()
@@ -424,6 +460,7 @@ class Billion():
         if search:
             number = re.sub(decimal_separator_pattern, '.', search.group(1))
             return float(number)
+        #first check pattern with decimal if self.include_decimal == True
         if self.include_decimal:
             search = re.fullmatch(self.pattern1 + self.adding_decimal_pattern, text)
             if search:
@@ -434,6 +471,7 @@ class Billion():
                     res += self.million.convert(search.group(2))
                 res += self.decimal.convert(search.group(3))
                 return res
+        #then check all patterns without decimal part
         search = re.fullmatch(self.pattern1, text)
         if search:
             res = 0.
@@ -442,6 +480,7 @@ class Billion():
             if search.group(2):
                 res += self.million.convert(search.group(2))
             return res
+        #sublevel pattern check
         search = re.fullmatch(self.pattern2, text)
         if search:
             res = self.million.convert(search.group(1))
