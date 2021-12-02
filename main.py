@@ -22,7 +22,7 @@ one_digit_dict = {
     'پنج' : 5.,
     'شش' : 6.,
     'هفت' : 7.,
-    'هشت' : 8.,
+    'هشت' : .8,
     'نه' : 9.
 }
 
@@ -87,10 +87,17 @@ def get_normalized_text(text):
 
 #class of decimal part of language
 class Decimal():
+    non_decimal_instance = None
+
+    @staticmethod
+    def get_instance():
+        if Decimal.non_decimal_instance is None:
+            Decimal.non_decimal_instance = Decimal()
+        return Decimal.non_decimal_instance
 
     def __init__(self):
         self.digit_pattern = '(?:' + decimal_separator_pattern + ')\d*'
-        self.hundred = Hundred(include_decimal = False)
+        self.hundred = Hundred.get_instance(include_decimal = False)
         #pattern like نیم
         self.pattern1 = '(' + get_dict_pattern(decimal_exceptional_dict) + ')'
         #pattern like دویست صدم
@@ -116,15 +123,28 @@ class Decimal():
 
 
 class OneDigit():
+    non_decimal_instance = None
+    decimal_instance = None
+
+    @staticmethod
+    def get_instance(include_decimal = True):
+        if include_decimal:
+            if OneDigit.decimal_instance is None:
+                OneDigit.decimal_instance = OneDigit(include_decimal = include_decimal)
+            return OneDigit.decimal_instance
+        else:
+            if OneDigit.non_decimal_instance is None:
+                OneDigit.non_decimal_instance = OneDigit(include_decimal = include_decimal)
+            return OneDigit.non_decimal_instance
 
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
-        self.digit_pattern = '(0*\d{1})'
+        self.digit_pattern = '(0*[1-9])'
         #pattern like یک
         self.pattern1 = '(' + get_dict_pattern(one_digit_dict) + ')'
         self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if include_decimal:
-            self.decimal = Decimal()
+            self.decimal = Decimal.get_instance()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
                                     self.decimal.digit_pattern + ')?)'
             self.adding_decimal_pattern = '(?:\s*و\s*(' + self.decimal.get_class_patterns() + '))'
@@ -169,11 +189,24 @@ class OneDigit():
 
 
 class TwoDigit():
+    non_decimal_instance = None
+    decimal_instance = None
+
+    @staticmethod
+    def get_instance(include_decimal = True):
+        if include_decimal:
+            if TwoDigit.decimal_instance is None:
+                TwoDigit.decimal_instance = TwoDigit(include_decimal = include_decimal)
+            return TwoDigit.decimal_instance
+        else:
+            if TwoDigit.non_decimal_instance is None:
+                TwoDigit.non_decimal_instance = TwoDigit(include_decimal = include_decimal)
+            return TwoDigit.non_decimal_instance
 
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
-        self.digit_pattern = '(0*\d{2})'
-        self.one_digit = OneDigit(include_decimal = include_decimal)
+        self.digit_pattern = '(0*[1-9]\d{1})'
+        self.one_digit = OneDigit.get_instance(include_decimal = include_decimal)
         #pattern like یازده
         self.pattern1 = '(' + get_dict_pattern(two_digit_dict1) + ')'
         #pattern like پنجاه و دو
@@ -182,11 +215,10 @@ class TwoDigit():
         self.pattern3 = '(' + self.one_digit.get_class_patterns() + ')'
         self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if include_decimal:
-            self.decimal = Decimal()
+            self.decimal = Decimal.get_instance()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
                                     self.decimal.digit_pattern + ')?)'
             self.adding_decimal_pattern = '(?:\s*و\s*(' + self.decimal.get_class_patterns() + '))'
-            self.decimal_pattern = '(' + self.decimal.get_class_patterns() + ')'
 
     def convert(self, text):
         search = re.fullmatch(self.digit_pattern, text)
@@ -246,11 +278,24 @@ class TwoDigit():
 
 
 class Hundred():
+    non_decimal_instance = None
+    decimal_instance = None
+
+    @staticmethod
+    def get_instance(include_decimal = True):
+        if include_decimal:
+            if Hundred.decimal_instance is None:
+                Hundred.decimal_instance = Hundred(include_decimal = include_decimal)
+            return Hundred.decimal_instance
+        else:
+            if Hundred.non_decimal_instance is None:
+                Hundred.non_decimal_instance = Hundred(include_decimal = include_decimal)
+            return Hundred.non_decimal_instance
 
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
-        self.digit_pattern = '(0*\d{3})'
-        self.two_digit = TwoDigit(include_decimal = include_decimal)
+        self.digit_pattern = '(0*[1-9]\d{2})'
+        self.two_digit = TwoDigit.get_instance(include_decimal = include_decimal)
         hundred_part = '(?:(' + get_dict_pattern(three_digits_dict) + ')' + \
                         '|(' + self.two_digit.get_class_patterns() + ')\s*' + value_list[0] + ')'
         two_digit_part = '(' + self.two_digit.get_class_patterns() + ')'
@@ -260,11 +305,10 @@ class Hundred():
         self.pattern2 = two_digit_part
         self.decimal_suffixes = get_dict_pattern(decimal_exceptional_dict) + '|' + get_dict_pattern(decimal_dict)
         if (include_decimal):
-            self.decimal = Decimal()
+            self.decimal = Decimal.get_instance()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
                                     self.decimal.digit_pattern + ')?)'
             self.adding_decimal_pattern = '(?:\s*و\s*(' + self.decimal.get_class_patterns() + '))'
-            self.decimal_pattern = '(' + self.decimal.get_class_patterns() + ')'
 
     def convert(self, text):
         search = re.fullmatch(self.digit_pattern, text)
@@ -315,11 +359,18 @@ class Hundred():
 
 
 class Thousand():
+    decimal_instance = None
+
+    @staticmethod
+    def get_instance():
+        if Thousand.decimal_instance is None:
+            Thousand.decimal_instance = Thousand()
+        return Thousand.decimal_instance
 
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
-        self.digit_pattern = '(0*\d{4,6})'
-        self.hundred = Hundred(include_decimal = include_decimal)
+        self.digit_pattern = '(0*[1-9]\d{3,5})'
+        self.hundred = Hundred.get_instance()
         thousand_part = '(?:(?:(' + self.hundred.get_class_patterns() + ')\s*)?' + value_list[1] + ')'
         hundred_part = '(' + self.hundred.get_class_patterns() + ')'
         #pattern like 2 هزار و صد و 20
@@ -327,11 +378,10 @@ class Thousand():
         #sublevel patterns in the language hierarchy tree
         self.pattern2 = hundred_part
         if (include_decimal):
-            self.decimal = Decimal()
+            self.decimal = Decimal.get_instance()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
                                     self.decimal.digit_pattern + ')?)'
             self.adding_decimal_pattern = '(?:\s*و\s*(' + self.decimal.get_class_patterns() + '))'
-            self.decimal_pattern = '(' + self.decimal.get_class_patterns() + ')'
 
     def convert(self, text):
         search = re.fullmatch(self.digit_pattern, text)
@@ -376,11 +426,18 @@ class Thousand():
         return remove_pattern_groups_matching(class_pattern)
 
 class Million():
+    decimal_instance = None
+
+    @staticmethod
+    def get_instance():
+        if Million.decimal_instance is None:
+            Million.decimal_instance = Million()
+        return Million.decimal_instance
 
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
-        self.digit_pattern = '(0*\d{7,9})'
-        self.thousand = Thousand(include_decimal = include_decimal)
+        self.digit_pattern = '(0*[1-9]\d{6,8})'
+        self.thousand = Thousand.get_instance()
         million_part = '(?:(' + self.thousand.get_class_patterns() + ')\s*' + value_list[2] + ')'
         thousand_part = '(' + self.thousand.get_class_patterns() + ')'
         #pattern like دویست میلیون و 100 هزار
@@ -388,11 +445,10 @@ class Million():
         #sublevel patterns in the language hierarchy tree
         self.pattern2 = thousand_part
         if (include_decimal):
-            self.decimal = Decimal()
+            self.decimal = Decimal.get_instance()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
                                     self.decimal.digit_pattern + ')?)'
             self.adding_decimal_pattern = '(?:\s*و\s*(' + self.decimal.get_class_patterns() + '))'
-            self.decimal_pattern = '(' + self.decimal.get_class_patterns() + ')'
 
     def convert(self, text):
         search = re.fullmatch(self.digit_pattern, text)
@@ -437,11 +493,18 @@ class Million():
         return remove_pattern_groups_matching(class_pattern)
 
 class Billion():
+    decimal_instance = None
+
+    @staticmethod
+    def get_instance():
+        if Billion.decimal_instance is None:
+            Billion.decimal_instance = Billion()
+        return Billion.decimal_instance
 
     def __init__(self, include_decimal = True):
         self.include_decimal = include_decimal
-        self.digit_pattern = '(0*\d{10,12})'
-        self.million = Million(include_decimal = include_decimal)
+        self.digit_pattern = '(0*[1-9]\d{9,11})'
+        self.million = Million.get_instance()
         billion_part = '(?:(' + self.million.get_class_patterns() + ')\s*' + value_list[3] + ')'
         million_part = '(' + self.million.get_class_patterns() + ')'
         #pattern like دویست هزار میلیارد و یک
@@ -449,11 +512,10 @@ class Billion():
         #sublevel patterns in the language hierarchy tree
         self.pattern2 = million_part
         if (include_decimal):
-            self.decimal = Decimal()
+            self.decimal = Decimal.get_instance()
             self.digit_pattern = '(' + remove_pattern_groups_matching(self.digit_pattern) + '(?:' + \
                                     self.decimal.digit_pattern + ')?)'
             self.adding_decimal_pattern = '(?:\s*و\s*(' + self.decimal.get_class_patterns() + '))'
-            self.decimal_pattern = '(' + self.decimal.get_class_patterns() + ')'
 
     def convert(self, text):
         search = re.fullmatch(self.digit_pattern, text)
@@ -500,7 +562,7 @@ class Billion():
 
 def number_extractor(text):
     output = []
-    number_class = Billion()
+    number_class = Billion.get_instance()
     whole_pattern = '(' + number_class.get_class_patterns() + ')'
     text = get_normalized_text(text)
     matched_patterns = re.finditer(whole_pattern, text)
